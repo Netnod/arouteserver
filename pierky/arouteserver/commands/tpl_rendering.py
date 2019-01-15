@@ -20,7 +20,8 @@ import sys
 
 from .base import ARouteServerCommand
 from ..builder import ConfigBuilder, BIRDConfigBuilder, \
-                      OpenBGPDConfigBuilder, TemplateContextDumper
+                      OpenBGPDConfigBuilder, TemplateContextDumper, \
+                      GoBGPDConfigBuilder
 from ..config.program import program_config
 from ..errors import ARouteServerError, TemplateRenderingError
 
@@ -306,6 +307,16 @@ class OpenBGPDCommand(ConfigRenderingCommand):
 
     def _get_template_sub_dir(self):
         return "openbgpd"
+
+class GoBGPDCommand(ConfigRenderingCommand):
+
+    COMMAND_NAME = "gobgpd"
+    COMMAND_HELP = "Build route server configuration for GoBGPD."
+
+    BUILDER_CLASS = GoBGPDConfigBuilder
+
+    def _get_template_sub_dir(self):
+        return "gobgpd"
 
 class HTMLCommand(TemplateRenderingCommands):
 

@@ -726,6 +726,40 @@ class BIRDConfigBuilder(ConfigBuilder):
 
         env.filters["hook_is_set"] = hook_is_set
 
+class GoBGPDConfigBuilder(ConfigBuilder):
+    """GoBGPD configuration builder.
+    """
+
+    LOCAL_FILES_IDS = ["header", "header4", "header6",
+                       "footer", "footer4", "footer6",
+                       "client", "client4", "client6"]
+    LOCAL_FILES_BASE_DIR = "/etc/gobgpd"
+
+    HOOKS = ["pre_receive_from_client", "post_receive_from_client",
+             "pre_announce_to_client", "post_announce_to_client",
+             "route_can_be_announced_to", "announce_rpki_invalid_to_client",
+             "scrub_communities_in", "scrub_communities_out",
+             "apply_blackhole_filtering_policy"]
+
+    AVAILABLE_VERSION = ["2.0.0"]
+    DEFAULT_VERSION = "2.0.0"
+
+    def validate_bgpspeaker_specific_configuration(self):
+        # TODO: Implement
+        return True
+
+    def _include_local_file(self, local_file_id):
+        return 'include "{}";\n\n'.format(
+            os.path.join(
+                self.local_files_dir or self.LOCAL_FILES_BASE_DIR,
+                "{}.local".format(local_file_id)
+            )
+        )
+
+    def enrich_j2_environment(self, env):
+        # TODO: Implement
+        pass
+
 class OpenBGPDConfigBuilder(ConfigBuilder):
     """OpenBGPD configuration builder.
     """
