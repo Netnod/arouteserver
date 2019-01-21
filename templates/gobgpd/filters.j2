@@ -65,7 +65,7 @@ policy-definitions:
 {% set asns = [] %}
 {% for client in clients|sort(attribute="asn") %}
 {% if client.asn not in asns %}
-{{ 	asns.append(client.asn) if client.asn != None }}
+{{ 	asns.append(client.asn)|default("", True) }}
 {% endif %}
 {% endfor %}
 {% for asn in asns %}
