@@ -1,0 +1,33 @@
+{% macro write_prefix_list_entry(entry) %}
+        - ip-prefix: {{ entry.prefix }}/{{ entry.length }}
+{%             if not entry.exact %}
+{%                     if entry.ge %}
+{%                             set prefixlen_start = entry.ge %}
+{%                     else %}
+{%                             set prefixlen_start = entry.length %}
+{%                     endif %}
+{%                     if entry.le %}
+{%                             set prefixlen_end = entry.le %}
+{%                     else %}
+{%                             set prefixlen_end = entry.max_length %}
+{%                     endif %}
+{%                     if prefixlen_start != prefixlen_end %}
+          masklength-range: "{{ prefixlen_start ~ ".." ~ prefixlen_end }}"
+{%                     else %}
+          masklength-range: "{{ prefixlen_start }}"
+{%                     endif %}
+{%             endif %}
+{% endmacro %}
+{% macro write_prefix_list(prefix_list, group=False) %}
+{% for entry in prefix_list %}
+{{ write_prefix_list_entry(entry) -}}
+{%      if not loop.last %}{% endif %}
+{% endfor %}
+{% endmacro %}
+
+{% macro write_prefixset_list(prefix_list, ip_ver=None) %}
+{% for entry in prefix_list if not ip_ver or entry.prefix|ipaddr_ver == ip_ver %}
+{{ write_prefix_list_entry(entry) }}
+{% endfor %}
+{% endmacro %}
+

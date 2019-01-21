@@ -1,0 +1,39 @@
+{% for client in clients %}
+## AS{{ client.asn }}
+  - config:
+      neighbor-address: {{ client.ip }}
+      peer-as: {{ client.asn }}
+{% if client.password %}
+      auth-password: "{{ client.password }}"
+{% endif %}
+      description: {{ client.description }}
+    transport:
+      config:
+        passive-mode: true
+    route-server:
+      config:
+        route-server-client: true
+    afi-safis:
+      - config:
+          afi-safi-name: ipv{{ client.ip|ipaddr_ver }}-unicast
+{% if client.cfg.filtering.max_prefix.action %}
+{%	if client.ip|ipaddr_ver == 4 %}
+{%		set max_pref_limit = client.cfg.filtering.max_prefix.limit_ipv4 %}
+{%	elif client.ip|ipaddr_ver == 6 %}
+{%		set max_pref_limit = client.cfg.filtering.max_prefix.limit_ipv6 %}
+{%	else %}
+{%		set max_pref_limit = 0 %}
+{%	endif %}
+{%	if max_pref_limit > 0 %}
+        prefix-limit:
+          config:
+            max-prefixes: {{ max_pref_limit }}
+{%	endif %}
+{% endif %}
+    apply-policy:
+      config:
+        import-policy-list: [as{{ client.asn }}-import,default-import]
+        export-policy-list: [as{{ client.asn }}-export,default-export]
+        default-import-policy: "accept-route"
+        default-export-policy: "accept-route"
+{% endfor %}
