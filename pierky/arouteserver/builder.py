@@ -757,6 +757,9 @@ class GoBGPDConfigBuilder(ConfigBuilder):
         )
 
     def enrich_j2_environment(self, env):
+        def community_is_set(comm, type):
+            return self.cfg_general["communities"][comm][type] != None
+
         def get_communities(type):
             comms = {}
             for comm_name in ConfigParserGeneral.COMMUNITIES_SCHEMA:
@@ -766,6 +769,7 @@ class GoBGPDConfigBuilder(ConfigBuilder):
             return comms
 
         env.globals["get_communities"] = get_communities
+        env.globals["community_is_set"] = community_is_set
 
 
 class OpenBGPDConfigBuilder(ConfigBuilder):

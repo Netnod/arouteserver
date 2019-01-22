@@ -35,41 +35,8 @@ policy-definitions:
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
-      - conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: prepend-large-1x
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: last-as
-              repeat-n: 1
-      - conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: prepend-large-2x
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: last-as
-              repeat-n: 2
-      - conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: prepend-large-3x
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: last-as
-              repeat-n: 3
 
-{% set asns = [] %}
-{% for client in clients|sort(attribute="asn") %}
-{% if client.asn not in asns %}
-{{ 	asns.append(client.asn)|default("", True) }}
-{% endif %}
-{% endfor %}
-{% for asn in asns %}
+{% for asn in clients|map(attribute='asn')|unique|list %}
   - name: as{{ asn }}-import
     statements:
       - conditions:
@@ -79,6 +46,58 @@ policy-definitions:
               match-set-options: invert
         actions:
           route-disposition: "reject-route"
+      {% if community_is_set("prepend_once_to_any","lrg") %}
+      - conditions:
+          bgp-conditions:
+            match-large-community-set:
+              large-community-set: prepend-large-1x-as{{asn}}
+        actions:
+          bgp-actions:
+            set-as-path-prepend:
+              as: last-as
+              repeat-n: 1
+      {% endif %}
+      {% if community_is_set("prepend_twice_to_any","lrg") %}
+      - conditions:
+          bgp-conditions:
+            match-large-community-set:
+              large-community-set: prepend-large-2x-as{{asn}}
+        actions:
+          bgp-actions:
+            set-as-path-prepend:
+              as: last-as
+              repeat-n: 2
+      {% endif %}
+      {% if community_is_set("prepend_thrice_to_any","lrg") %}
+      - conditions:
+          bgp-conditions:
+            match-large-community-set:
+              large-community-set: prepend-large-3x-as{{asn}}
+        actions:
+          bgp-actions:
+            set-as-path-prepend:
+              as: last-as
+              repeat-n: 3
+      {% endif %}
+  - name: as{{ asn }}-export
+    statements:
+    {% if community_is_set("announce_to_peer","std") %}
+      - conditions:
+          bgp-conditions:
+            match-community-set:
+              community-set: announce_to_peer_as{{asn}}
+        actions:
+          route-disposition: accept-route
+    {% endif %}
+      - conditions:
+          bgp-conditions:
+            match-community-set:
+              community-set: generic-reject
+        actions:
+            route-disposition: reject-route
+    }
+
+
 {% endfor %}
 
 -------------
@@ -133,53 +152,3 @@ defined-sets:
   {{ write_community("extended-community", name, community, clients=clients)|indent(2, False) }}
   {% endfor %}
   {% endif -%}
-
-{#
-
-#### STANDARD GLOBAL COMMUNITIES
-
-      - community-set-name: std-prepend-once-to-any
-        community-list:
-          - 65501:$RS_AS
-      - community-set-name: std-prepend-twice-to-any
-        community-list:
-          - 65502:$RS_AS
-      - community-set-name: std-prepend-thrice-to-any
-        community-list:
-          - 65503:$RS_AS
-#### STANDARD PEER SPECIFIC COMMUNITIES
-      - community-set-name: accept-route-for-as-community-as$PEER_AS 
-        community-list:
-          - $RS_AS:$PEER_AS
-      - community-set-name: deny-route-for-as-community-as$PEER_AS
-        community-list:
-          - 0:$PEER_AS
-      - community-set-name: std-prepend-once-to-as$PEER_AS
-        community-list:
-          - 65511:$PEER_AS
-      - community-set-name: std-prepend-twice-to-as$PEER_AS
-        community-list:
-          - 65512:$PEER_AS
-      - community-set-name: std-prepend-thrice-to-as$PEER_AS
-        community-list:
-          - 65513:$PEER_AS
-    large-community-sets:
-#### LARGE GLOBAL COMMUNITIES
-      - large-community-set-name: "lrg-do-not-announce-to-any"
-        large-community-list: ["$RS_AS:0:0"]
-      - large-community-set-name: "prepend-large-1x-to-any"
-        large-community-list: ["52005:101:0"]
-      - large-community-set-name: "prepend-large-2x-to-any"
-        large-community-list: ["52005:102:0"]
-      - large-community-set-name: "prepend-large-3x-to-any"
-        large-community-list: ["52005:103:0"]
-#### LARGE PEER SPECIFIC COMMUNITIES, LARGE 
-      - large-community-set-name: "lrg-announce-to-peer"
-        large-community-list: ["$RS_AS:1:$PEER_AS"]
-      - large-community-set-name: "prepend-large-1x-to-as$PEER_AS"
-        large-community-list: ["52005:101:$PEER_AS"]
-      - large-community-set-name: "prepend-large-2x-to-as$PEER_AS"
-        large-community-list: ["52005:102:$PEER_AS"]
-      - large-community-set-name: "prepend-large-3x-to-as$PEER_AS"
-        large-community-list: ["52005:103:$PEER_AS"]
-#}
