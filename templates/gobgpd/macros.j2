@@ -31,3 +31,22 @@
 {% endfor %}
 {% endmacro %}
 
+{% macro write_community(left,name, community, clients=None, peer_asn=None) %}
+	{% if "peer_as" in community and peer_asn == None %}
+		{% for client in clients|sort(attribute="asn") %}
+{{ write_community(left, name, community, peer_asn=client.asn) -}}
+		{% endfor %}
+	{% else -%}
+{{ write_community_entry(left,name,community,peer_asn) -}}
+	{% endif %}
+{% endmacro %}
+
+{% macro write_community_entry(left, name, community,peer_asn=None) %}
+	{% if "peer_as" in community %}
+- {{left}}-set-name: {{name + "_%s" % peer_asn}}
+	{% else %}
+- {{left}}-set-name: {{name}}
+	{% endif %}
+	{{left}}-list:
+	- {{community|replace("peer_as", peer_asn) -}}
+{% endmacro %}

@@ -757,8 +757,16 @@ class GoBGPDConfigBuilder(ConfigBuilder):
         )
 
     def enrich_j2_environment(self, env):
-        # TODO: Implement
-        pass
+        def get_communities(type):
+            comms = {}
+            for comm_name in ConfigParserGeneral.COMMUNITIES_SCHEMA:
+                comm = self.cfg_general["communities"][comm_name]
+                if comm[type] != None:
+                    comms[comm_name] = comm[type]
+            return comms
+
+        env.globals["get_communities"] = get_communities
+
 
 class OpenBGPDConfigBuilder(ConfigBuilder):
     """OpenBGPD configuration builder.
