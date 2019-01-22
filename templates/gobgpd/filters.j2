@@ -46,6 +46,8 @@ policy-definitions:
               match-set-options: invert
         actions:
           route-disposition: "reject-route"
+
+      ## Communities 
       {% if community_is_set("prepend_once_to_any","lrg") %}
       - conditions:
           bgp-conditions:
@@ -95,9 +97,6 @@ policy-definitions:
               community-set: generic-reject
         actions:
             route-disposition: reject-route
-    }
-
-
 {% endfor %}
 
 -------------
