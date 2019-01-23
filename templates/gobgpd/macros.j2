@@ -1,5 +1,6 @@
+{# write_prefix_list_entry #}
 {% macro write_prefix_list_entry(entry) %}
-        - ip-prefix: {{ entry.prefix }}/{{ entry.length }}
+- ip-prefix: {{ entry.prefix }}/{{ entry.length }}
 {%             if not entry.exact %}
 {%                     if entry.ge %}
 {%                             set prefixlen_start = entry.ge %}
@@ -12,41 +13,53 @@
 {%                             set prefixlen_end = entry.max_length %}
 {%                     endif %}
 {%                     if prefixlen_start != prefixlen_end %}
-          masklength-range: "{{ prefixlen_start ~ ".." ~ prefixlen_end }}"
+  masklength-range: "{{ prefixlen_start ~ ".." ~ prefixlen_end }}"
 {%                     else %}
-          masklength-range: "{{ prefixlen_start }}"
+  masklength-range: "{{ prefixlen_start }}"
 {%                     endif %}
+{%             else %}
 {%             endif %}
 {% endmacro %}
-{% macro write_prefix_list(prefix_list, group=False) %}
-{% for entry in prefix_list %}
-{{ write_prefix_list_entry(entry) -}}
-{%      if not loop.last %}{% endif %}
-{% endfor %}
-{% endmacro %}
+
+{# write_prefixset_list #}
+
 
 {% macro write_prefixset_list(prefix_list, ip_ver=None) %}
-{% for entry in prefix_list if not ip_ver or entry.prefix|ipaddr_ver == ip_ver %}
-{{ write_prefix_list_entry(entry) -}}
-{% endfor %}
+{% for set in prefix_list if not ip_ver or entry.prefix|ipaddr_ver == ip_ver %}
+{{ write_prefix_list_entry(set) }}
+{%- endfor %}
 {% endmacro %}
+
+{# write_community #}
 
 {% macro write_community(left,name, community, clients=None, peer_asn=None) %}
 	{% if "peer_as" in community and peer_asn == None %}
 		{% for client in clients|sort(attribute="asn") %}
 {{ write_community(left, name, community, peer_asn=client.asn) }}
 		{% endfor %}
-	{% else -%}
+	{% else %}
 {{ write_community_entry(left,name,community,peer_asn) -}}
 	{% endif %}
 {% endmacro %}
 
+{# write_community_entry #}
+
 {% macro write_community_entry(left, name, community,peer_asn=None) %}
 	{% if "peer_as" in community %}
-- {{left}}-set-name: {{name + "_as%s" % peer_asn}}
+- {{left}}-set-name: "{{name + "_as%s" % peer_asn}}"
 	{% else %}
-- {{left}}-set-name: {{name}}
+- {{left}}-set-name: "{{name}}"
 	{% endif %}
-  {{left}}-list:
-  - {{community|replace("peer_as", peer_asn) -}}
+{{left}}-list:
+  - "{{community|replace("peer_as", peer_asn) -}}"
 {% endmacro %}
+
+
+{# write_prefixset_list #}
+{% macro write_aspath_list(asns) %}
+{% for asn in asns -%} 
+- "{{asn}}$"
+{% endfor %}
+{% endmacro %}
+
+

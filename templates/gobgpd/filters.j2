@@ -2,6 +2,9 @@
 {% from 'macros.j2' import write_prefix_list_entry %}
 {% from 'macros.j2' import write_prefixset_list %}
 {% from 'macros.j2' import write_community %}
+{% from 'macros.j2' import as_path_match %}
+{% from 'macros.j2' import write_aspath_list %}
+
 # ---------------------------------------------------------
 # FILTERS
 
@@ -10,35 +13,46 @@ policy-definitions:
     statements:
       - conditions:
           match-prefix-set:
-            prefix-set: "generic-martians"
+            prefix-set: "generic-bogons"
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
       - conditions:
           bgp-conditions:
             match-community-set:
-              community-set: accept-route-for-as-community
+              community-set: "accept-route-for-as-community"
         actions:
-          route-disposition: accept-route
+          route-disposition: "accept-route"
       - conditions:
           bgp-conditions:
             match-community-set:
-              community-set: generic-reject
+              community-set: "generic-reject"
         actions:
-          route-disposition: reject-route
+          route-disposition: "reject-route"
 
   - name: default-import
     statements:
       - conditions:
           match-prefix-set:
-            prefix-set: "generic-martians"
+            prefix-set: "generic-bogons"
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
 
 {% for asn in clients|map(attribute='asn')|unique|list %}
+{% set client = get_client_from_asn(asn) %}
   - name: as{{ asn }}-import
     statements:
+      - conditions:
+          bgp-conditions:
+{%      for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
+{%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
+            - match-as-path-set: "AS-SET-{{ as_set_bundle.name }}_ASNs"
+              match-set-options: "invert"
+
+{% endfor %}
+        actions:
+          route-disposition: "reject-route"
       - conditions:
           bgp-conditions:
             match-as-path-set:
@@ -52,102 +66,122 @@ policy-definitions:
       - conditions:
           bgp-conditions:
             match-large-community-set:
-              large-community-set: prepend-large-1x-as{{asn}}
+              large-community-set: "prepend-large-1x-as{{asn}}"
         actions:
           bgp-actions:
             set-as-path-prepend:
-              as: last-as
+              as: "last-as"
               repeat-n: 1
       {% endif %}
       {% if community_is_set("prepend_twice_to_any","lrg") %}
       - conditions:
           bgp-conditions:
             match-large-community-set:
-              large-community-set: prepend-large-2x-as{{asn}}
+              large-community-set: "prepend-large-2x-as{{asn}}"
         actions:
           bgp-actions:
             set-as-path-prepend:
-              as: last-as
+              as: "last-as"
               repeat-n: 2
       {% endif %}
       {% if community_is_set("prepend_thrice_to_any","lrg") %}
       - conditions:
           bgp-conditions:
             match-large-community-set:
-              large-community-set: prepend-large-3x-as{{asn}}
+              large-community-set:" prepend-large-3x-as{{asn}}"
         actions:
           bgp-actions:
             set-as-path-prepend:
-              as: last-as
+              as: "last-as"
               repeat-n: 3
       {% endif %}
+
   - name: as{{ asn }}-export
     statements:
     {% if community_is_set("announce_to_peer","std") %}
       - conditions:
           bgp-conditions:
             match-community-set:
-              community-set: announce_to_peer_as{{asn}}
+              community-set: "announce_to_peer_as{{asn}}"
         actions:
-          route-disposition: accept-route
+          route-disposition: "accept-route"
     {% endif %}
       - conditions:
           bgp-conditions:
             match-community-set:
-              community-set: generic-reject
+              community-set: "generic-reject"
         actions:
-            route-disposition: reject-route
+            route-disposition: "reject-route"
 {% endfor %}
-
--------------
 
 defined-sets:
+{# 
+------------------------------------------
+  Prefix sets
+------------------------------------------
+#}
   prefix-sets:
-    - prefix-set-name: generic-martians
-      prefix-list:
-{{      write_prefixset_list(bogons) }}
+    - prefix-set-name: "generic-bogons"
+      {{write_prefixset_list(bogons)|indent(6,false)}}
+
 {% for as_set_bundle_id in irrdb_info|sort %}
 {%    set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-{%    if as_set_bundle.prefixes|length == 0 %}
-      # no prefixes found for {{ as_set_bundle.name }}
-{%    else %}
+{%    if as_set_bundle.prefixes|length > 0 %}
     - prefix-set-name: "AS-SET-{{ as_set_bundle.name }}_PREFIXES"
-      prefix-list:
-{{ write_prefix_list(as_set_bundle.prefixes, True) }}
+      {{ write_prefixset_list(as_set_bundle.prefixes)|indent(6, False) }}
 {%    endif %}
-{% endfor %}
-
+{%- endfor %}
+{# 
+------------------------------------------
+  BGP Sets
+------------------------------------------
+#}
   bgp-defined-sets:
+  {# 
+  ------------------------------------------
+    AS-Paths Sets
+  ------------------------------------------
+  #}
     as-path-sets:
 {% for as_set_bundle_id in irrdb_info|sort %}
 {%    set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-      # {{ as_set_bundle.descr }}, used_by {{ as_set_bundle.used_by|sort|join(", ") }}
-{%    if as_set_bundle.asns|length == 0 %}
-      # no origin ASNs found for {{ as_set_bundle.name }}
-{%    else %}
+{%    if as_set_bundle.asns|length > 0 %}
       - as-path-set-name: "AS-SET-{{ as_set_bundle.name }}_ASNs"
-        as-path-list: {{ as_set_bundle.asns|sort }}
+        as-path-list:
+        {{ write_aspath_list(as_set_bundle.asns|sort)|indent(8, False) }}
 {% endif %}
-{% endfor %}
-
+{%- endfor %}
+{# 
+------------------------------------------
+  Standard community lists 
+------------------------------------------
+#}
   {% if get_communities("std").items()|length > 0 %}
   community-sets:
   {% for (name, community) in get_communities("std").items() %}
-  {{ write_community("community", name, community, clients=clients)|indent(2, False) }}
+      {{ write_community("community", name, community, clients=clients)|indent(8, False) }}
   {% endfor %}
   {% endif -%}
-
+{# 
+------------------------------------------
+  Large community lists 
+------------------------------------------
+#}
   {% if get_communities("lrg").items()|length > 0 %}
   large-community-sets:
   {% for (name, community) in get_communities("lrg").items() %}
-  {{ write_community("large-community", name, community, clients=clients)|indent(2, False) }}
+      {{ write_community("large-community", name, community, clients=clients)|indent(8, False) }}
   {% endfor %}
   {% endif -%}
 
-
+{# 
+------------------------------------------
+  Extended community lists 
+------------------------------------------
+#}
   {% if get_communities("ext").items()|length > 0 %}
   extended-community-sets:
   {% for (name, community) in get_communities("ext").items() %}
-  {{ write_community("extended-community", name, community, clients=clients)|indent(2, False) }}
+      {{ write_community("extended-community", name, community, clients=clients)|indent(8, False) }}
   {% endfor %}
   {% endif -%}

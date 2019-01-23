@@ -760,6 +760,13 @@ class GoBGPDConfigBuilder(ConfigBuilder):
         def community_is_set(comm, type):
             return self.cfg_general["communities"][comm][type] != None
 
+        def get_client_from_asn(asn):
+            clients = filter(lambda y: y["asn"] == asn,list(self.cfg_clients))
+            if len(clients) > 0:
+                return clients[0]
+            else:
+                return None
+
         def get_communities(type):
             comms = {}
             for comm_name in ConfigParserGeneral.COMMUNITIES_SCHEMA:
@@ -768,8 +775,10 @@ class GoBGPDConfigBuilder(ConfigBuilder):
                     comms[comm_name] = comm[type]
             return comms
 
+
         env.globals["get_communities"] = get_communities
         env.globals["community_is_set"] = community_is_set
+        env.globals["get_client_from_asn"] = get_client_from_asn
 
 
 class OpenBGPDConfigBuilder(ConfigBuilder):
