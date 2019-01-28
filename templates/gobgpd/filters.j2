@@ -49,7 +49,15 @@ policy-definitions:
 {%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
             - match-as-path-set: "AS-SET-{{ as_set_bundle.name }}_ASNs"
               match-set-options: "invert"
-
+{% endfor %}
+        actions:
+          route-disposition: "reject-route"
+      - conditions:
+          bgp-conditions:
+{%      for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
+{%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
+            - match-as-path-set: "AS-SET-{{ as_set_bundle.name }}_PREFIXES"
+              match-set-options: "invert"
 {% endfor %}
         actions:
           route-disposition: "reject-route"
