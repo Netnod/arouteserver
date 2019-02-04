@@ -169,7 +169,7 @@ defined-sets:
   {% if get_communities("std").items()|length > 0 %}
   community-sets:
   {% for (name, community) in get_communities("std").items() %}
-      {{ write_community("community", name, community, clients=clients)|indent(8, False) }}
+  {{ write_community("community", name, community, clients=clients)|indent(4, False) }}
   {% endfor %}
   {% endif -%}
 {# 
@@ -180,7 +180,7 @@ defined-sets:
   {% if get_communities("lrg").items()|length > 0 %}
   large-community-sets:
   {% for (name, community) in get_communities("lrg").items() %}
-      {{ write_community("large-community", name, community, clients=clients)|indent(8, False) }}
+  {{ write_community("large-community", name, community, clients=clients)|indent(4, False) }}
   {% endfor %}
   {% endif -%}
 
@@ -192,6 +192,6 @@ defined-sets:
   {% if get_communities("ext").items()|length > 0 %}
   extended-community-sets:
   {% for (name, community) in get_communities("ext").items() %}
-      {{ write_community("extended-community", name, community, clients=clients)|indent(8, False) }}
+  {{ write_community("extended-community", name, community, clients=clients)|indent(4, False) }}
   {% endfor %}
   {% endif -%}
