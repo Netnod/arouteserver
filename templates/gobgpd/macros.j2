@@ -50,7 +50,7 @@
 	{% else %}
 - {{left}}-set-name: "{{name}}"
 	{% endif %}
-{{left}}-list:
+  {{left}}-list:
   - "{{community|replace("peer_as", peer_asn) -}}"
 {% endmacro %}
 
