@@ -130,12 +130,14 @@ defined-sets:
 #}
   prefix-sets:
     - prefix-set-name: "generic-bogons"
+      prefix-list:
       {{write_prefixset_list(bogons)|indent(6,false)}}
 
 {% for as_set_bundle_id in irrdb_info|sort %}
 {%    set as_set_bundle = irrdb_info[as_set_bundle_id] %}
 {%    if as_set_bundle.prefixes|length > 0 %}
     - prefix-set-name: "AS-SET-{{ as_set_bundle.name }}_PREFIXES"
+      prefix-list:
       {{ write_prefixset_list(as_set_bundle.prefixes)|indent(6, False) }}
 {%    endif %}
 {%- endfor %}
