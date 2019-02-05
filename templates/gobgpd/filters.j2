@@ -11,19 +11,15 @@
 policy-definitions:
   - name: default-export
     statements:
-      - conditions:
+      - name: Reject export-bogons
+        conditions:
           match-prefix-set:
             prefix-set: "generic-bogons"
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
-      - conditions:
-          bgp-conditions:
-            match-community-set:
-              community-set: "accept-route-for-as-community"
-        actions:
-          route-disposition: "accept-route"
-      - conditions:
+      - name: Reject route community
+        conditions:
           bgp-conditions:
             match-community-set:
               community-set: "generic-reject"
@@ -32,7 +28,8 @@ policy-definitions:
 
   - name: default-import
     statements:
-      - conditions:
+      - name: Reject import-bogons
+        conditions:
           match-prefix-set:
             prefix-set: "generic-bogons"
             match-set-options: "any"
@@ -43,25 +40,31 @@ policy-definitions:
 {% set client = get_client_from_asn(asn) %}
   - name: as{{ asn }}-import
     statements:
-      - conditions:
-          bgp-conditions:
 {%      for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
 {%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-            - match-as-path-set: "AS-SET-{{ as_set_bundle.name }}_ASNs"
+      - name: Reject if ASPath not in AS-SET-{{ as_set_bundle.name }}_ASNs
+        conditions:
+          bgp-conditions:
+            match-as-path-set:
+              as-path-set: "AS-SET-{{ as_set_bundle.name }}_ASNs"
               match-set-options: "invert"
-{% endfor %}
         actions:
           route-disposition: "reject-route"
-      - conditions:
-          bgp-conditions:
+{% endfor %}
+
 {%      for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
 {%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-            - match-as-path-set: "AS-SET-{{ as_set_bundle.name }}_PREFIXES"
-              match-set-options: "invert"
-{% endfor %}
+      - name: Reject PREFIXES not in AS-SET-{{ as_set_bundle.name }}_PREFIXES
+        conditions:
+          match-prefix-set:
+            prefix-set: "AS-SET-{{ as_set_bundle.name }}_PREFIXES"
+            match-set-options: "invert"
         actions:
           route-disposition: "reject-route"
-      - conditions:
+{% endfor %}
+
+      - name: Allow only the peering ASN as first ASN
+        conditions:
           bgp-conditions:
             match-as-path-set:
               as-path-set: "as{{ asn }}-first"
@@ -69,12 +72,14 @@ policy-definitions:
         actions:
           route-disposition: "reject-route"
 
-      ## Communities 
+      ## Communities
       {% if community_is_set("prepend_once_to_any","lrg") %}
-      - conditions:
+      - name: Prepend once {{asn}}
+        conditions:
           bgp-conditions:
             match-large-community-set:
               large-community-set: "prepend-large-1x-as{{asn}}"
+              match-set-options: "any"
         actions:
           bgp-actions:
             set-as-path-prepend:
@@ -82,10 +87,12 @@ policy-definitions:
               repeat-n: 1
       {% endif %}
       {% if community_is_set("prepend_twice_to_any","lrg") %}
-      - conditions:
+      - name: Prepend twice {{asn}}
+        conditions:
           bgp-conditions:
             match-large-community-set:
               large-community-set: "prepend-large-2x-as{{asn}}"
+              match-set-options: "any"
         actions:
           bgp-actions:
             set-as-path-prepend:
@@ -93,10 +100,12 @@ policy-definitions:
               repeat-n: 2
       {% endif %}
       {% if community_is_set("prepend_thrice_to_any","lrg") %}
-      - conditions:
+      - name: Prepend thrice {{asn}}
+        conditions:
           bgp-conditions:
             match-large-community-set:
-              large-community-set:" prepend-large-3x-as{{asn}}"
+              large-community-set: "prepend-large-3x-as{{asn}}"
+              match-set-options: "any"
         actions:
           bgp-actions:
             set-as-path-prepend:
@@ -123,7 +132,7 @@ policy-definitions:
 {% endfor %}
 
 defined-sets:
-{# 
+{#
 ------------------------------------------
   Prefix sets
 ------------------------------------------
@@ -141,13 +150,13 @@ defined-sets:
       {{ write_prefixset_list(as_set_bundle.prefixes)|indent(6, False) }}
 {%    endif %}
 {%- endfor %}
-{# 
+{#
 ------------------------------------------
   BGP Sets
 ------------------------------------------
 #}
   bgp-defined-sets:
-  {# 
+  {#
   ------------------------------------------
     AS-Paths Sets
   ------------------------------------------
@@ -161,37 +170,37 @@ defined-sets:
         {{ write_aspath_list(as_set_bundle.asns|sort)|indent(8, False) }}
 {% endif %}
 {%- endfor %}
-{# 
+{#
 ------------------------------------------
-  Standard community lists 
+  Standard community lists
 ------------------------------------------
 #}
   {% if get_communities("std").items()|length > 0 %}
-  community-sets:
+    community-sets:
   {% for (name, community) in get_communities("std").items() %}
-  {{ write_community("community", name, community, clients=clients)|indent(2, False) }}
-  {% endfor %}
+    {{ write_community("community", name, community, clients=clients)|indent(4, False) }}
+  {%- endfor %}
   {% endif -%}
-{# 
+{#
 ------------------------------------------
-  Large community lists 
+  Large community lists
 ------------------------------------------
 #}
   {% if get_communities("lrg").items()|length > 0 %}
-  large-community-sets:
+    large-community-sets:
   {% for (name, community) in get_communities("lrg").items() %}
-  {{ write_community("large-community", name, community, clients=clients)|indent(2, False) }}
-  {% endfor %}
+    {{ write_community("large-community", name, community, clients=clients)|indent(4, False) }}
+  {%- endfor %}
   {% endif -%}
 
-{# 
+{#
 ------------------------------------------
-  Extended community lists 
+  Extended community lists
 ------------------------------------------
 #}
   {% if get_communities("ext").items()|length > 0 %}
-  extended-community-sets:
+    ext-community-sets:
   {% for (name, community) in get_communities("ext").items() %}
-  {{ write_community("extended-community", name, community, clients=clients)|indent(2, False) }}
-  {% endfor %}
+    {{ write_community("ext-community", name, community, clients=clients)|indent(4, False) }}
+  {%- endfor %}
   {% endif -%}
