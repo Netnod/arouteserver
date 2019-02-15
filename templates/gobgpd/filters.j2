@@ -11,10 +11,17 @@
 policy-definitions:
   - name: default-export
     statements:
-      - name: Reject export-bogons
+      - name: Reject export-bogons-IPV4
         conditions:
           match-prefix-set:
-            prefix-set: "generic-bogons"
+            prefix-set: "generic-bogons-IPV4"
+            match-set-options: "any"
+        actions:
+          route-disposition : "reject-route"
+      - name: Reject export-bogons-IPV6
+        conditions:
+          match-prefix-set:
+            prefix-set: "generic-bogons-IPV6"
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
@@ -22,16 +29,23 @@ policy-definitions:
         conditions:
           bgp-conditions:
             match-community-set:
-              community-set: "generic-reject"
+              community-set: "do_not_announce_to_any"
         actions:
           route-disposition: "reject-route"
 
   - name: default-import
     statements:
-      - name: Reject import-bogons
+      - name: Reject import-bogons-IPV4
         conditions:
           match-prefix-set:
-            prefix-set: "generic-bogons"
+            prefix-set: "generic-bogons-IPV4"
+            match-set-options: "any"
+        actions:
+          route-disposition : "reject-route"
+      - name: Reject import-bogons-IPV6
+        conditions:
+          match-prefix-set:
+            prefix-set: "generic-bogons-IPV6"
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
@@ -54,10 +68,17 @@ policy-definitions:
 
 {%      for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
 {%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-      - name: Reject PREFIXES not in AS-SET-{{ as_set_bundle.name }}_PREFIXES
+      - name: Reject PREFIXES not in AS-SET-{{ as_set_bundle.name }}_IPV4_PREFIXES
         conditions:
           match-prefix-set:
-            prefix-set: "AS-SET-{{ as_set_bundle.name }}_PREFIXES"
+            prefix-set: "AS-SET-{{ as_set_bundle.name }}_IPV4_PREFIXES"
+            match-set-options: "invert"
+        actions:
+          route-disposition: "reject-route"
+      - name: Reject PREFIXES not in AS-SET-{{ as_set_bundle.name }}_IPV6_PREFIXES
+        conditions:
+          match-prefix-set:
+            prefix-set: "AS-SET-{{ as_set_bundle.name }}_IPV6_PREFIXES"
             match-set-options: "invert"
         actions:
           route-disposition: "reject-route"
@@ -67,18 +88,18 @@ policy-definitions:
         conditions:
           bgp-conditions:
             match-as-path-set:
-              as-path-set: "as{{ asn }}-first"
+              as-path-set: "AS{{ asn }}-first"
               match-set-options: invert
         actions:
           route-disposition: "reject-route"
 
       ## Communities
       {% if community_is_set("prepend_once_to_any","lrg") %}
-      - name: Prepend once {{asn}}
+      - name: Prepend once
         conditions:
           bgp-conditions:
             match-large-community-set:
-              large-community-set: "prepend-large-1x-as{{asn}}"
+              large-community-set: "prepend_once_to_any"
               match-set-options: "any"
         actions:
           bgp-actions:
@@ -87,11 +108,11 @@ policy-definitions:
               repeat-n: 1
       {% endif %}
       {% if community_is_set("prepend_twice_to_any","lrg") %}
-      - name: Prepend twice {{asn}}
+      - name: Prepend twice
         conditions:
           bgp-conditions:
             match-large-community-set:
-              large-community-set: "prepend-large-2x-as{{asn}}"
+              large-community-set: "prepend_twice_to_any"
               match-set-options: "any"
         actions:
           bgp-actions:
@@ -100,11 +121,11 @@ policy-definitions:
               repeat-n: 2
       {% endif %}
       {% if community_is_set("prepend_thrice_to_any","lrg") %}
-      - name: Prepend thrice {{asn}}
+      - name: Prepend thrice
         conditions:
           bgp-conditions:
             match-large-community-set:
-              large-community-set: "prepend-large-3x-as{{asn}}"
+              large-community-set: "prepend_thrice_to_any"
               match-set-options: "any"
         actions:
           bgp-actions:
@@ -123,10 +144,52 @@ policy-definitions:
         actions:
           route-disposition: "accept-route"
     {% endif %}
+
+      ## Communities
+      {% if community_is_set("prepend_once_to_peer","lrg") %}
+      - name: Prepend once to {{asn}}
+        conditions:
+          bgp-conditions:
+            match-large-community-set:
+              large-community-set: "prepend_once_to_peer_as{{asn}}"
+              match-set-options: "any"
+        actions:
+          bgp-actions:
+            set-as-path-prepend:
+              as: "last-as"
+              repeat-n: 1
+      {% endif %}
+      {% if community_is_set("prepend_twice_to_peer","lrg") %}
+      - name: Prepend twice to {{asn}}
+        conditions:
+          bgp-conditions:
+            match-large-community-set:
+              large-community-set: "prepend_twice_to_peer_as{{asn}}"
+              match-set-options: "any"
+        actions:
+          bgp-actions:
+            set-as-path-prepend:
+              as: "last-as"
+              repeat-n: 2
+      {% endif %}
+      {% if community_is_set("prepend_thrice_to_peer","lrg") %}
+      - name: Prepend thrice to {{asn}}
+        conditions:
+          bgp-conditions:
+            match-large-community-set:
+              large-community-set: "prepend_thrice_to_peer_as{{asn}}"
+              match-set-options: "any"
+        actions:
+          bgp-actions:
+            set-as-path-prepend:
+              as: "last-as"
+              repeat-n: 3
+      {% endif %}
+
       - conditions:
           bgp-conditions:
             match-community-set:
-              community-set: "generic-reject"
+              community-set: "do_not_announce_to_any"
         actions:
             route-disposition: "reject-route"
 {% endfor %}
@@ -138,16 +201,22 @@ defined-sets:
 ------------------------------------------
 #}
   prefix-sets:
-    - prefix-set-name: "generic-bogons"
+    - prefix-set-name: "generic-bogons-IPV4"
       prefix-list:
-      {{write_prefixset_list(bogons)|indent(6,false)}}
+      {{write_prefixset_list(bogons,4)|indent(6,false)}}
+    - prefix-set-name: "generic-bogons-IPV6"
+      prefix-list:
+      {{write_prefixset_list(bogons,6)|indent(6,false)}}
 
 {% for as_set_bundle_id in irrdb_info|sort %}
 {%    set as_set_bundle = irrdb_info[as_set_bundle_id] %}
 {%    if as_set_bundle.prefixes|length > 0 %}
-    - prefix-set-name: "AS-SET-{{ as_set_bundle.name }}_PREFIXES"
+    - prefix-set-name: "AS-SET-{{ as_set_bundle.name }}_IPV4_PREFIXES"
       prefix-list:
-      {{ write_prefixset_list(as_set_bundle.prefixes)|indent(6, False) }}
+      {{ write_prefixset_list(as_set_bundle.prefixes, 4)|indent(6, False) }}
+    - prefix-set-name: "AS-SET-{{ as_set_bundle.name }}_IPV6_PREFIXES"
+      prefix-list:
+      {{ write_prefixset_list(as_set_bundle.prefixes, 4)|indent(6, False) }}
 {%    endif %}
 {%- endfor %}
 {#
@@ -162,6 +231,10 @@ defined-sets:
   ------------------------------------------
   #}
     as-path-sets:
+{% for client in clients|sort(attribute="asn") %}
+      - as-path-set-name: "AS{{client.asn}}-first"
+        as-path-list: ["^{{client.asn}}"]
+{% endfor %}
 {% for as_set_bundle_id in irrdb_info|sort %}
 {%    set as_set_bundle = irrdb_info[as_set_bundle_id] %}
 {%    if as_set_bundle.asns|length > 0 %}

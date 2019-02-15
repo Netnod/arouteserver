@@ -14,8 +14,6 @@
 {%                     endif %}
 {%                     if prefixlen_start != prefixlen_end %}
   masklength-range: "{{ prefixlen_start ~ ".." ~ prefixlen_end }}"
-{%                     else %}
-  masklength-range: "{{ prefixlen_start }}"
 {%                     endif %}
 {%             else %}
 {%             endif %}
@@ -25,7 +23,7 @@
 
 
 {% macro write_prefixset_list(prefix_list, ip_ver=None) %}
-{% for set in prefix_list if not ip_ver or entry.prefix|ipaddr_ver == ip_ver %}
+{% for set in prefix_list if not ip_ver or set.prefix|ipaddr_ver == ip_ver %}
 {{ write_prefix_list_entry(set) }}
 {%- endfor %}
 {% endmacro %}
