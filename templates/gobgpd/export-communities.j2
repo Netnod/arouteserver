@@ -1,150 +1,31 @@
+{% from 'macros.j2' import write_community_conditions %} 
+
 # Communities
-{% if community_is_set("announce_to_peer") %}
-- name: Announce to {{asn}}
-  conditions:
-    bgp-conditions:
-    {% if community_is_set("announce_to_peer","std") %}
-      match-community-set:
-        community-set: "announce_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("announce_to_peer","lrg") %}
-      match-large-community-set:
-        large-community-set: "announce_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("announce_to_peer","ext") %}
-      match-ext-community-set:
-        ext-community-set: "announce_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-  actions:
-    route-disposition: "accept-route"
-{% endif %}
+{% call write_community_conditions("announce_to_peer", asn) %}
+route-disposition: "accept-route"
+{% endcall %}
 
-{% if community_is_set("do_not_announce_to_peer") %}
-- name: Do not announce to {{asn}}
-  conditions:
-    bgp-conditions:
-    {% if community_is_set("do_not_announce_to_peer","std") %}
-      match-community-set:
-        community-set: "do_not_announce_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("do_not_announce_to_peer","lrg") %}
-      match-large-community-set:
-        large-community-set: "do_not_announce_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("do_not_announce_to_peer","ext") %}
-      match-ext-community-set:
-        ext-community-set: "do_not_announce_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-  actions:
-    route-disposition: "reject-route"
-{% endif %}
+{% call write_community_conditions("do_not_announce_to_peer", asn) %}
+route-disposition: "reject-route"
+{% endcall %}
 
-{% if community_is_set("do_not_announce_to_any") %}
-- name: Do not announce to any - {{asn}}
-  conditions:
-    bgp-conditions:
-    {% if community_is_set("do_not_announce_to_any","std") %}
-      match-community-set:
-        community-set: "do_not_announce_to_any"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("do_not_announce_to_any","lrg") %}
-      match-large-community-set:
-        large-community-set: "do_not_announce_to_any"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("do_not_announce_to_any","ext") %}
-      match-ext-community-set:
-        ext-community-set: "do_not_announce_to_any"
-        match-set-options: "any"
-    {% endif %}
-  actions:
-    route-disposition: "reject-route"
-{% endif %}
+{% call write_community_conditions("prepend_once_to_peer", asn) %}
+bgp-actions:
+  set-as-path-prepend:
+    as: "last-as"
+    repeat-n: 1
+{% endcall %}
 
-{% if community_is_set("prepend_once_to_peer") %}
-- name: Prepend once to {{asn}}
-  conditions:
-    bgp-conditions:
-    {% if community_is_set("prepend_once_to_peer","std") %}
-      match-community-set:
-        community-set: "prepend_once_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("prepend_once_to_peer","lrg") %}
-      match-large-community-set:
-        large-community-set: "prepend_once_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("prepend_once_to_peer","ext") %}
-      match-ext-community-set:
-        ext-community-set: "prepend_once_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-  actions:
-    bgp-actions:
-      set-as-path-prepend:
-        as: "last-as"
-        repeat-n: 1
-{% endif %}
+{% call write_community_conditions("prepend_twice_to_peer", asn) %}
+bgp-actions:
+  set-as-path-prepend:
+    as: "last-as"
+    repeat-n: 2
+{% endcall %}
 
-
-
-{% if community_is_set("prepend_twice_to_peer") %}
-- name: Prepend twice to {{asn}}
-  conditions:
-    bgp-conditions:
-    {% if community_is_set("prepend_twice_to_peer","std") %}
-      match-community-set:
-        community-set: "prepend_twice_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("prepend_twice_to_peer","lrg") %}
-      match-large-community-set:
-        large-community-set: "prepend_twice_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("prepend_twice_to_peer","ext") %}
-      match-ext-community-set:
-        ext-community-set: "prepend_twice_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-  actions:
-    bgp-actions:
-      set-as-path-prepend:
-        as: "last-as"
-        repeat-n: 2
-{% endif %}
-
-
-{% if community_is_set("prepend_thrice_to_peer") %}
-- name: Prepend thrice to {{asn}}
-  conditions:
-    bgp-conditions:
-    {% if community_is_set("prepend_thrice_to_peer","std") %}
-      match-community-set:
-        community-set: "prepend_thrice_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("prepend_thrice_to_peer","lrg") %}
-      match-large-community-set:
-        large-community-set: "prepend_thrice_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-    {% if community_is_set("prepend_thrice_to_peer","ext") %}
-      match-ext-community-set:
-        ext-community-set: "prepend_thrice_to_peer_as{{asn}}"
-        match-set-options: "any"
-    {% endif %}
-  actions:
-    bgp-actions:
-      set-as-path-prepend:
-        as: "last-as"
-        repeat-n: 3
-{% endif %}
+{% call write_community_conditions("prepend_thrice_to_peer", asn) %}
+bgp-actions:
+  set-as-path-prepend:
+    as: "last-as"
+    repeat-n: 3
+{% endcall %}
