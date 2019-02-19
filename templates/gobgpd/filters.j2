@@ -54,35 +54,14 @@ policy-definitions:
 {% set client = get_client_from_asn(asn) %}
   - name: as{{ asn }}-import
     statements:
-{%      for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
-{%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-      - name: Reject if ASPath not in AS-SET-{{ as_set_bundle.name }}_ASNs
+      - name: Reject if ASPath not in IRRDB-ASSet-{{asn}}
         conditions:
           bgp-conditions:
             match-as-path-set:
-              as-path-set: "AS-SET-{{ as_set_bundle.name }}_ASNs"
+              as-path-set: "IRRDB-ASSet-{{asn}}"
               match-set-options: "invert"
         actions:
           route-disposition: "reject-route"
-{% endfor %}
-
-{%      for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
-{%        set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-      - name: Reject PREFIXES not in AS-SET-{{ as_set_bundle.name }}_IPV4_PREFIXES
-        conditions:
-          match-prefix-set:
-            prefix-set: "AS-SET-{{ as_set_bundle.name }}_IPV4_PREFIXES"
-            match-set-options: "invert"
-        actions:
-          route-disposition: "reject-route"
-      - name: Reject PREFIXES not in AS-SET-{{ as_set_bundle.name }}_IPV6_PREFIXES
-        conditions:
-          match-prefix-set:
-            prefix-set: "AS-SET-{{ as_set_bundle.name }}_IPV6_PREFIXES"
-            match-set-options: "invert"
-        actions:
-          route-disposition: "reject-route"
-{% endfor %}
 
       - name: Allow only the peering ASN as first ASN
         conditions:
@@ -192,6 +171,27 @@ policy-definitions:
               community-set: "do_not_announce_to_any"
         actions:
             route-disposition: "reject-route"
+
+  - name: as{{ asn }}-ipv4-import
+    statements:
+      - name: Reject IPV4 PREFIXES not belonging to AS{{asn}}
+        conditions:
+          match-prefix-set:
+            prefix-set: "AS{{asn}}_IPV4_PREFIXES"
+            match-set-options: "invert"
+        actions:
+          route-disposition: "reject-route"
+
+  - name: as{{ asn }}-ipv6-import
+    statements:
+      - name: Reject IPV6 PREFIXES not belonging to AS{{asn}}
+        conditions:
+          match-prefix-set:
+            prefix-set: "AS{{asn}}_IPV6_PREFIXES"
+            match-set-options: "invert"
+        actions:
+          route-disposition: "reject-route"
+
 {% endfor %}
 
 defined-sets:
@@ -208,17 +208,26 @@ defined-sets:
       prefix-list:
       {{write_prefixset_list(bogons,6)|indent(6,false)}}
 
-{% for as_set_bundle_id in irrdb_info|sort %}
-{%    set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-{%    if as_set_bundle.prefixes|length > 0 %}
-    - prefix-set-name: "AS-SET-{{ as_set_bundle.name }}_IPV4_PREFIXES"
+
+{% for asn in clients|map(attribute='asn')|unique|list %}
+{%    set client = get_client_from_asn(asn) %}
+    - prefix-set-name: "AS{{asn}}_IPV4_PREFIXES"
       prefix-list:
-      {{ write_prefixset_list(as_set_bundle.prefixes, 4)|indent(6, False) }}
-    - prefix-set-name: "AS-SET-{{ as_set_bundle.name }}_IPV6_PREFIXES"
+{%    for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
+{%      set as_set_bundle = irrdb_info[as_set_bundle_id] %}
+      # {{as_set_bundle.name }}
+      {{ write_prefixset_list(as_set_bundle.prefixes, 4)|indent(6, False) -}}
+{%    endfor %}
+
+    - prefix-set-name: "AS{{asn}}_IPV6_PREFIXES"
       prefix-list:
-      {{ write_prefixset_list(as_set_bundle.prefixes, 4)|indent(6, False) }}
-{%    endif %}
-{%- endfor %}
+{%    for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
+{%      set as_set_bundle = irrdb_info[as_set_bundle_id] %}
+      # {{as_set_bundle.name }}
+      {{ write_prefixset_list(as_set_bundle.prefixes, 6)|indent(6, False) -}}
+{%    endfor %}
+{% endfor %}
+
 {#
 ------------------------------------------
   BGP Sets
@@ -231,18 +240,22 @@ defined-sets:
   ------------------------------------------
   #}
     as-path-sets:
-{% for client in clients|sort(attribute="asn") %}
-      - as-path-set-name: "AS{{client.asn}}-first"
-        as-path-list: ["^{{client.asn}}"]
-{% endfor %}
-{% for as_set_bundle_id in irrdb_info|sort %}
-{%    set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-{%    if as_set_bundle.asns|length > 0 %}
-      - as-path-set-name: "AS-SET-{{ as_set_bundle.name }}_ASNs"
+{% for asn in clients|map(attribute='asn')|unique|list %}
+{%    set client = get_client_from_asn(asn) %}
+      - as-path-set-name: "AS{{asn}}-first"
+        as-path-list: ["^{asn}}"]
+
+      - as-path-set-name: "IRRDB-ASSet-{{asn}}"
         as-path-list:
-        {{ write_aspath_list(as_set_bundle.asns|sort)|indent(8, False) }}
-{% endif %}
+{%    for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
+{%      set as_set_bundle = irrdb_info[as_set_bundle_id] %}
+{%      if as_set_bundle.asns|length > 0 %}
+        # {{as_set_bundle.name }}
+        {{ write_aspath_list(as_set_bundle.asns|sort)|indent(8, False) -}}
+{%      endif %}
+{%    endfor %}
 {%- endfor %}
+
 {#
 ------------------------------------------
   Standard community lists

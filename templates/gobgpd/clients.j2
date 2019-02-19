@@ -33,7 +33,7 @@ neighbors:
 {% endif %}
     apply-policy:
       config:
-        import-policy-list: [as{{ client.asn }}-import,default-import]
+        import-policy-list: [as{{ client.asn }}-import,as{{client.asn}}-ipv{{client.ip|ipaddr_ver}}-import,default-import]
         export-policy-list: [as{{ client.asn }}-export,default-export]
         default-import-policy: "accept-route"
         default-export-policy: "accept-route"
