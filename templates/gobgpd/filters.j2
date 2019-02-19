@@ -123,7 +123,14 @@ policy-definitions:
         actions:
           route-disposition: "accept-route"
     {% endif %}
-
+    {% if community_is_set("do_not_announce_to_peer","std") %}
+      - conditions:
+          bgp-conditions:
+            match-community-set:
+              community-set: "do_not_announce_to_peer_as{{asn}}"
+        actions:
+          route-disposition: "reject-route"
+    {% endif %}
       ## Communities
       {% if community_is_set("prepend_once_to_peer","lrg") %}
       - name: Prepend once to {{asn}}
