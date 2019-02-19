@@ -24,3 +24,7 @@ bgp-actions:
     as: "last-as"
     repeat-n: 3
 {% endcall %}
+
+{% call write_community_conditions("do_not_announce_to_any") %}
+route-disposition: "reject-route"
+{% endcall %}

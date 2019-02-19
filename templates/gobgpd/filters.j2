@@ -26,13 +26,6 @@ policy-definitions:
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
-      - name: Reject route community
-        conditions:
-          bgp-conditions:
-            match-community-set:
-              community-set: "do_not_announce_to_any"
-        actions:
-          route-disposition: "reject-route"
 
   - name: default-import
     statements:
