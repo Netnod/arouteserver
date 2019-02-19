@@ -46,7 +46,7 @@
 {% endif %}
 
 {% if community_is_set("do_not_announce_to_any") %}
-- name: Do not announce to any
+- name: Do not announce to any - {{asn}}
   conditions:
     bgp-conditions:
     {% if community_is_set("do_not_announce_to_any","std") %}
