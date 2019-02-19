@@ -25,6 +25,22 @@ bgp-actions:
     repeat-n: 3
 {% endcall %}
 
+{% call write_community_conditions("add_noexport_to_peer", asn) %}
+bgp-actions:
+  set-community:
+    options: add
+    set-community-method:
+      communities-list: [no-export]
+{% endcall %}
+
+{% call write_community_conditions("add_noadvertise_to_peer", asn) %}
+bgp-actions:
+  set-community:
+    options: add
+    set-community-method:
+      communities-list: [no-advertise]
+{% endcall %}
+
 {% call write_community_conditions("do_not_announce_to_any") %}
 route-disposition: "reject-route"
 {% endcall %}

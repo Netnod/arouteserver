@@ -43,7 +43,6 @@ policy-definitions:
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
-      {{ generic_communities()|indent(6, false) }}
 
 {% for asn in clients|map(attribute='asn')|unique|list %}
 {% set client = get_client_from_asn(asn) %}
