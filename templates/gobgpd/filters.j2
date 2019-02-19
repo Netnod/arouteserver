@@ -73,111 +73,13 @@ policy-definitions:
           route-disposition: "reject-route"
 
       ## Communities
-      {% if community_is_set("prepend_once_to_any","lrg") %}
-      - name: Prepend once to any {{asn}}
-        conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: "prepend_once_to_any"
-              match-set-options: "any"
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: "last-as"
-              repeat-n: 1
-      {% endif %}
-      {% if community_is_set("prepend_twice_to_any","lrg") %}
-      - name: Prepend twice to any {{asn}}
-        conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: "prepend_twice_to_any"
-              match-set-options: "any"
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: "last-as"
-              repeat-n: 2
-      {% endif %}
-      {% if community_is_set("prepend_thrice_to_any","lrg") %}
-      - name: Prepend thrice to any {{asn}}
-        conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: "prepend_thrice_to_any"
-              match-set-options: "any"
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: "last-as"
-              repeat-n: 3
-      {% endif %}
+      {% macro import_communities() %}{% include "import-communities.j2" %}{% endmacro %}
+      {{ import_communities()|indent(6) }}
 
   - name: as{{ asn }}-export
     statements:
-    {% if community_is_set("announce_to_peer","std") %}
-      - conditions:
-          bgp-conditions:
-            match-community-set:
-              community-set: "announce_to_peer_as{{asn}}"
-        actions:
-          route-disposition: "accept-route"
-    {% endif %}
-    {% if community_is_set("do_not_announce_to_peer","std") %}
-      - conditions:
-          bgp-conditions:
-            match-community-set:
-              community-set: "do_not_announce_to_peer_as{{asn}}"
-        actions:
-          route-disposition: "reject-route"
-    {% endif %}
-      ## Communities
-      {% if community_is_set("prepend_once_to_peer","lrg") %}
-      - name: Prepend once to {{asn}}
-        conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: "prepend_once_to_peer_as{{asn}}"
-              match-set-options: "any"
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: "last-as"
-              repeat-n: 1
-      {% endif %}
-      {% if community_is_set("prepend_twice_to_peer","lrg") %}
-      - name: Prepend twice to {{asn}}
-        conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: "prepend_twice_to_peer_as{{asn}}"
-              match-set-options: "any"
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: "last-as"
-              repeat-n: 2
-      {% endif %}
-      {% if community_is_set("prepend_thrice_to_peer","lrg") %}
-      - name: Prepend thrice to {{asn}}
-        conditions:
-          bgp-conditions:
-            match-large-community-set:
-              large-community-set: "prepend_thrice_to_peer_as{{asn}}"
-              match-set-options: "any"
-        actions:
-          bgp-actions:
-            set-as-path-prepend:
-              as: "last-as"
-              repeat-n: 3
-      {% endif %}
-
-      - conditions:
-          bgp-conditions:
-            match-community-set:
-              community-set: "do_not_announce_to_any"
-        actions:
-            route-disposition: "reject-route"
+      {% macro export_communities() %}{% include "export-communities.j2" %}{% endmacro %}
+      {{ export_communities()|indent(6) }}
 
   - name: as{{ asn }}-ipv4-import
     statements:

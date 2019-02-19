@@ -757,8 +757,11 @@ class GoBGPDConfigBuilder(ConfigBuilder):
         )
 
     def enrich_j2_environment(self, env):
-        def community_is_set(comm, type):
-            return self.cfg_general["communities"][comm][type] != None
+        def community_is_set(comm, type=None):
+            if type != None:
+                return self.cfg_general["communities"][comm][type] != None
+            else:
+                return self.cfg_general["communities"][comm] != None
 
         def get_client_from_asn(asn):
             clients = filter(lambda y: y["asn"] == asn,list(self.cfg_clients))

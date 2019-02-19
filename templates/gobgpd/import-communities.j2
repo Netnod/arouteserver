@@ -1,0 +1,25 @@
+{% if community_is_set("prepend_once_to_any") %}
+- name: Prepend once to any {{asn}}
+  conditions:
+    bgp-conditions:
+    {% if community_is_set("prepend_once_to_any","std") %}
+      match-community-set:
+        community-set: "prepend_once_to_any"
+        match-set-options: "any"
+    {% endif %}
+    {% if community_is_set("prepend_once_to_any","lrg") %}
+      match-large-community-set:
+        large-community-set: "prepend_once_to_any"
+        match-set-options: "any"
+    {% endif %}
+    {% if community_is_set("prepend_once_to_any","ext") %}
+      match-ext-community-set:
+        ext-community-set: "prepend_once_to_any"
+        match-set-options: "any"
+    {% endif %}
+  actions:
+    bgp-actions:
+      set-as-path-prepend:
+        as: "last-as"
+        repeat-n: 1
+{% endif %}

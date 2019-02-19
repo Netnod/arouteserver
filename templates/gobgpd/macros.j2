@@ -59,3 +59,11 @@
 - "{{asn}}$"
 {% endfor %}
 {% endmacro %}
+
+{% macro import_communities() %}
+{% include "import-communities.j2" %}
+{% endmacro %}
+
+{% macro export_communities() %}
+{% include "import-communities.j2" %}
+{% endmacro %}
