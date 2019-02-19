@@ -63,7 +63,7 @@ policy-definitions:
         actions:
           route-disposition: "reject-route"
 
-      - name: Allow only the peering ASN as first ASN
+      - name: Allow only {{asn}} as first ASN
         conditions:
           bgp-conditions:
             match-as-path-set:
@@ -74,7 +74,7 @@ policy-definitions:
 
       ## Communities
       {% if community_is_set("prepend_once_to_any","lrg") %}
-      - name: Prepend once
+      - name: Prepend once to any {{asn}}
         conditions:
           bgp-conditions:
             match-large-community-set:
@@ -87,7 +87,7 @@ policy-definitions:
               repeat-n: 1
       {% endif %}
       {% if community_is_set("prepend_twice_to_any","lrg") %}
-      - name: Prepend twice
+      - name: Prepend twice to any {{asn}}
         conditions:
           bgp-conditions:
             match-large-community-set:
@@ -100,7 +100,7 @@ policy-definitions:
               repeat-n: 2
       {% endif %}
       {% if community_is_set("prepend_thrice_to_any","lrg") %}
-      - name: Prepend thrice
+      - name: Prepend thrice to any {{asn}}
         conditions:
           bgp-conditions:
             match-large-community-set:
@@ -215,16 +215,14 @@ defined-sets:
       prefix-list:
 {%    for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
 {%      set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-      # {{as_set_bundle.name }}
-      {{ write_prefixset_list(as_set_bundle.prefixes, 4)|indent(6, False) -}}
+      {{ write_prefixset_list(as_set_bundle.prefixes, 4)|indent(6, False) }}
 {%    endfor %}
 
     - prefix-set-name: "AS{{asn}}_IPV6_PREFIXES"
       prefix-list:
 {%    for as_set_bundle_id in client.cfg.filtering.irrdb.as_set_bundle_ids|sort %}
 {%      set as_set_bundle = irrdb_info[as_set_bundle_id] %}
-      # {{as_set_bundle.name }}
-      {{ write_prefixset_list(as_set_bundle.prefixes, 6)|indent(6, False) -}}
+      {{ write_prefixset_list(as_set_bundle.prefixes, 6)|indent(6, False) }}
 {%    endfor %}
 {% endfor %}
 
@@ -243,7 +241,7 @@ defined-sets:
 {% for asn in clients|map(attribute='asn')|unique|list %}
 {%    set client = get_client_from_asn(asn) %}
       - as-path-set-name: "AS{{asn}}-first"
-        as-path-list: ["^{asn}}"]
+        as-path-list: ["^{{asn}}"]
 
       - as-path-set-name: "IRRDB-ASSet-{{asn}}"
         as-path-list:
