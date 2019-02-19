@@ -4,6 +4,7 @@
 {% from 'macros.j2' import write_community %}
 {% from 'macros.j2' import as_path_match %}
 {% from 'macros.j2' import write_aspath_list %}
+{% from 'macros.j2' import generic_communities %}
 
 # ---------------------------------------------------------
 # FILTERS
@@ -49,6 +50,7 @@ policy-definitions:
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
+      {{ generic_communities()|indent(6, false) }}
 
 {% for asn in clients|map(attribute='asn')|unique|list %}
 {% set client = get_client_from_asn(asn) %}
@@ -78,13 +80,6 @@ policy-definitions:
 
   - name: as{{ asn }}-export
     statements:
-      - conditions:
-          bgp-conditions:
-            match-community-set:
-              community-set: "do_not_announce_to_any"
-        actions:
-            route-disposition: "reject-route"
-            
       {% macro export_communities() %}{% include "export-communities.j2" %}{% endmacro %}
       {{ export_communities()|indent(6) }}
 

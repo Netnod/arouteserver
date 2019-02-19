@@ -1,28 +1,23 @@
 {% from 'macros.j2' import write_community_conditions %} 
 
-# Communities
 {% call write_community_conditions("announce_to_peer", asn) %}
 route-disposition: "accept-route"
 {% endcall %}
-
 {% call write_community_conditions("do_not_announce_to_peer", asn) %}
 route-disposition: "reject-route"
 {% endcall %}
-
 {% call write_community_conditions("prepend_once_to_peer", asn) %}
 bgp-actions:
   set-as-path-prepend:
     as: "last-as"
     repeat-n: 1
 {% endcall %}
-
 {% call write_community_conditions("prepend_twice_to_peer", asn) %}
 bgp-actions:
   set-as-path-prepend:
     as: "last-as"
     repeat-n: 2
 {% endcall %}
-
 {% call write_community_conditions("prepend_thrice_to_peer", asn) %}
 bgp-actions:
   set-as-path-prepend:

@@ -60,36 +60,59 @@
 {% endfor %}
 {% endmacro %}
 
+{# generic_communities #}
+{% macro generic_communities() %}
+{% call write_community_conditions("prepend_once_to_any") %}
+bgp-actions:
+  set-as-path-prepend:
+    as: "last-as"
+    repeat-n: 1
+{% endcall %}
+{% call write_community_conditions("prepend_twice_to_any") %}
+bgp-actions:
+  set-as-path-prepend:
+    as: "last-as"
+    repeat-n: 2
+{% endcall %}
+{% call write_community_conditions("prepend_thrice_to_any") %}
+bgp-actions:
+  set-as-path-prepend:
+    as: "last-as"
+    repeat-n: 3
+{% endcall %}
+{% endmacro %}
 
 {# write_community_conditions #}
-{% macro write_community_conditions(community,asn) %}
+{% macro write_community_conditions(community,asn=None) %}
 {% if community_is_set(community) %}
+  {% set community_name = community %}		
+  {%- if asn != None %}
+    {%- set community_name %}{{community}}_as{{asn}}{% endset %}
+  {%- endif %}
 
   {% if community_is_set(community,"std") %}
 - conditions:
     bgp-conditions:
       match-community-set:
-        community-set: "{{community}}_as{{asn}}"
+        community-set: "{{community_name}}"
         match-set-options: "any"
   actions:
     {{ caller()|indent(4,false) }}
   {% endif %}
-
   {% if community_is_set(community,"lrg") %}
 - conditions:
     bgp-conditions:
       match-large-community-set:
-        large-community-set: "{{community}}_as{{asn}}"
+        large-community-set: "{{community_name}}"
         match-set-options: "any"
   actions:
     {{ caller()|indent(4,false) }}
   {% endif %}
-
   {% if community_is_set(community,"ext") %}
 - conditions:
     bgp-conditions:
       match-ext-community-set:
-        ext-community-set: "{{community}}_as{{asn}}"
+        ext-community-set: "{{community_name}}"
         match-set-options: "any"
   actions:
     {{ caller()|indent(4,false) }}
