@@ -84,6 +84,7 @@ policy-definitions:
               community-set: "do_not_announce_to_any"
         actions:
             route-disposition: "reject-route"
+            
       {% macro export_communities() %}{% include "export-communities.j2" %}{% endmacro %}
       {{ export_communities()|indent(6) }}
 
