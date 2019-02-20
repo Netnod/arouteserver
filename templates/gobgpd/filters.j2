@@ -29,6 +29,20 @@ policy-definitions:
 
   - name: default-import
     statements:
+      - name: Reject small-prefixes-IPV4
+        conditions:
+          match-prefix-set:
+            prefix-set: "small-prefixes-IPV4"
+            match-set-options: "invert"
+        actions:
+          route-disposition : "reject-route"
+      - name: Reject small-prefixes-IPV6
+        conditions:
+          match-prefix-set:
+            prefix-set: "small-prefixes-IPV6"
+            match-set-options: "invert"
+        actions:
+          route-disposition : "reject-route"
       - name: Reject import-bogons-IPV4
         conditions:
           match-prefix-set:
@@ -104,6 +118,14 @@ defined-sets:
 ------------------------------------------
 #}
   prefix-sets:
+    - prefix-set-name: "small-prefixes-IPV4"
+      prefix-list:
+        - ip-prefix: "0.0.0.0/0"
+          masklength-range: "{{cfg.filtering.ipv4_pref_len.min}}..{{cfg.filtering.ipv4_pref_len.max}}"
+    - prefix-set-name: "small-prefixes-IPV6"
+      prefix-list:
+        - ip-prefix: "::/0"
+          masklength-range: "{{cfg.filtering.ipv6_pref_len.min}}..{{cfg.filtering.ipv6_pref_len.max}}"
     - prefix-set-name: "generic-bogons-IPV4"
       prefix-list:
       {{write_prefixset_list(bogons,4)|indent(6,false)}}
