@@ -778,10 +778,28 @@ class GoBGPDConfigBuilder(ConfigBuilder):
                     comms[comm_name] = comm[type]
             return comms
 
+        def asns():
+            return set(map(lambda y: y["asn"], self.cfg_clients))
+
+        def get_incoming_communities(type):
+            communities = []
+            all_client_asns = asns()
+            for name,val in get_communities(type).items():
+                if ConfigParserGeneral.COMMUNITIES_SCHEMA[name]["type"] == "inbound" and community_is_set(name,type):
+                    if "peer_as" in val:
+                        for asn in all_client_asns:
+                            communities.append(val.replace("peer_as", str(asn)))
+                    else:
+                        communities.append(val)
+
+            return communities
+
+
 
         env.globals["get_communities"] = get_communities
         env.globals["community_is_set"] = community_is_set
         env.globals["get_client_from_asn"] = get_client_from_asn
+        env.globals["get_incoming_communities"] = get_incoming_communities
 
 
 class OpenBGPDConfigBuilder(ConfigBuilder):

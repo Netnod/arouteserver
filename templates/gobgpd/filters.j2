@@ -19,6 +19,7 @@ policy-definitions:
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
+
       - name: Reject export-bogons-IPV6
         conditions:
           match-prefix-set:
@@ -26,6 +27,45 @@ policy-definitions:
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
+
+      - name: Strip inbound std communities
+        conditions:
+          bgp-conditions:
+            match-community-set:
+              community-set: "strip-std-communities"
+              match-set-options: "any"
+        actions:
+          bgp-actions:
+            set-community:
+              options: remove
+              set-community-method:
+                community-set-ref: "strip-std-communities"
+
+      - name: Strip inbound large communities
+        conditions:
+          bgp-conditions:
+            match-large-community-set:
+              large-community-set: "strip-lrg-communities"
+              match-set-options: "any"
+        actions:
+          bgp-actions:
+            set-large-community:
+              options: remove
+              set-large-community-method:
+                communities-list: {{ get_incoming_communities("lrg") }}
+
+      - name: Strip inbound ext communities
+        conditions:
+          bgp-conditions:
+            match-ext-community-set:
+              ext-community-set: "strip-ext-communities"
+              match-set-options: "any"
+        actions:
+          bgp-actions:
+            set-ext-community:
+              options: remove
+              set-ext-community-method:
+                ext-community-set-ref: "strip-ext-communities"
 
   - name: default-import
     statements:
@@ -189,6 +229,8 @@ defined-sets:
   {% for (name, community) in get_communities("std").items() %}
     {{ write_community("community", name, community, clients=clients)|indent(4, False) }}
   {%- endfor %}
+      - community-set-name: "strip-std-communities"
+        community-list: {{ get_incoming_communities("std") }}
   {% endif -%}
 {#
 ------------------------------------------
@@ -200,6 +242,8 @@ defined-sets:
   {% for (name, community) in get_communities("lrg").items() %}
     {{ write_community("large-community", name, community, clients=clients)|indent(4, False) }}
   {%- endfor %}
+      - large-community-set-name: "strip-lrg-communities"
+        large-community-list: {{ get_incoming_communities("lrg") }}
   {% endif -%}
 
 {#
@@ -212,4 +256,6 @@ defined-sets:
   {% for (name, community) in get_communities("ext").items() %}
     {{ write_community("ext-community", name, community, clients=clients)|indent(4, False) }}
   {%- endfor %}
+      - ext-community-set-name: "strip-ext-communities"
+        ext-community-list: {{ get_incoming_communities("ext") }}
   {% endif -%}
