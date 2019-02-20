@@ -83,7 +83,7 @@ bgp-actions:
 {% endmacro %}
 
 {# write_community_conditions #}
-{% macro write_community_conditions(community,asn=None) %}
+{% macro write_community_conditions(community,asn=None,strip=false) %}
 {% if community_is_set(community) %}
   {% set community_name = community %}		
   {%- if asn != None %}
@@ -98,6 +98,19 @@ bgp-actions:
         match-set-options: "any"
   actions:
     {{ caller()|indent(4,false) }}
+  {% if strip %}
+- conditions:
+    bgp-conditions:
+      match-community-set:
+        community-set: "{{community_name}}"
+        match-set-options: "any"
+  actions:
+    bgp-actions:
+      set-community:
+        options: delete
+        set-community-method:
+          community-set-ref: "{{community_name}}"
+  {% endif %}
   {% endif %}
   {% if community_is_set(community,"lrg") %}
 - conditions:
@@ -107,6 +120,19 @@ bgp-actions:
         match-set-options: "any"
   actions:
     {{ caller()|indent(4,false) }}
+  {% if strip %}
+- conditions:
+    bgp-conditions:
+      match-large-community-set:
+        large-community-set: "{{community_name}}"
+        match-set-options: "any"
+  actions:
+    bgp-actions:
+      set-large-community:
+        options: delete
+        set-large-community-method:
+          communities-list: ["{{get_communities("lrg")[community]|replace("peer_as", asn)}}"]
+  {% endif %}
   {% endif %}
   {% if community_is_set(community,"ext") %}
 - conditions:
@@ -116,6 +142,19 @@ bgp-actions:
         match-set-options: "any"
   actions:
     {{ caller()|indent(4,false) }}
+  {% if strip %}
+- conditions:
+    bgp-conditions:
+      match-ext-community-set:
+        ext-community-set: "{{community_name}}"
+        match-set-options: "any"
+  actions:
+    bgp-actions:
+      set-ext-community:
+        options: delete
+        set-ext-community-method:
+          ext-community-set-ref: "{{community_name}}"
+  {% endif %}
   {% endif %}
 {% endif %}
 {% endmacro %}
