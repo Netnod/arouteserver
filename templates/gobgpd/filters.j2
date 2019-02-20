@@ -39,7 +39,7 @@ policy-definitions:
             set-community:
               options: remove
               set-community-method:
-                community-set-ref: "strip-std-communities"
+                communities-list: {{ get_incoming_communities("std") }}
 
       - name: Strip inbound large communities
         conditions:
@@ -65,7 +65,7 @@ policy-definitions:
             set-ext-community:
               options: remove
               set-ext-community-method:
-                ext-community-set-ref: "strip-ext-communities"
+                communities-list: {{ get_incoming_communities("ext") }}
 
   - name: default-import
     statements:
