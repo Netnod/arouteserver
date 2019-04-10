@@ -2,3 +2,9 @@ global:
   config:
     as: {{ cfg.rs_as }}
     router-id: {{ cfg.router_id }}
+{% if cfg.rpki_roas.rtr_server is defined %}
+rpki-servers:
+  - config:
+      address: {{cfg.rpki_roas.rtr_server}}
+      port: {% if cfg.rpki_roas.rtr_port is defined %} {{cfg.rpki_roas.rtr_port }} {% else %} 323 {% endif %}
+{% endif %}
