@@ -776,6 +776,10 @@ class GoBGPDConfigBuilder(ConfigBuilder):
                 comm = self.cfg_general["communities"][comm_name]
                 if comm[type] != None:
                     comms[comm_name] = comm[type]
+            for comm_name, comm in self.cfg_general["custom_communities"].items():
+                if comm[type] != None:
+                    comms[comm_name] = comm[type]
+
             return comms
 
         def asns():
@@ -785,7 +789,7 @@ class GoBGPDConfigBuilder(ConfigBuilder):
             communities = []
             all_client_asns = asns()
             for name,val in get_communities(type).items():
-                if ConfigParserGeneral.COMMUNITIES_SCHEMA[name]["type"] == "inbound" and community_is_set(name,type):
+                if name in ConfigParserGeneral.COMMUNITIES_SCHEMA.keys() and ConfigParserGeneral.COMMUNITIES_SCHEMA[name]["type"] == "inbound" and community_is_set(name,type):
                     if "peer_as" in val:
                         for asn in all_client_asns:
                             communities.append(val.replace("peer_as", str(asn)))

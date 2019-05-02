@@ -766,6 +766,7 @@ cfg:
     #
     # The 'rs_as' macro can be used here.
     do_not_announce_to_any:
+      strip: true
       #std:
       #lrg:
       #ext:

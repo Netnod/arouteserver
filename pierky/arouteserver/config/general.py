@@ -204,7 +204,7 @@ class ConfigParserGeneral(ConfigParserBase):
             mandatory=True,
             default="http://localcert.ripe.net:8088/export.json"
         )
-        r["rtr_server"] = ValidatorIPv4Addr(default="127.0.0.1")
+        r["rtr_server"] = ValidatorText(mandatory=True,default="127.0.0.1")
         r["rtr_port"] = ValidatorUInt(default=323)
         r["allowed_trust_anchors"] = ValidatorListOf(
             ValidatorText, mandatory=True, default=[

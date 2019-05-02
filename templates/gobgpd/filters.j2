@@ -97,6 +97,53 @@ policy-definitions:
             match-set-options: "any"
         actions:
           route-disposition : "reject-route"
+      - name: Reject RPKI invalid routes
+        conditions:
+          bgp-conditions:
+            rpki-validation-result: "invalid"
+        actions:
+          route-disposition : "reject-route"
+
+      - name: Tag RPKI unknown routes
+        conditions:
+          bgp-conditions:
+            rpki-validation-result: "not-found"
+        actions:
+          bgp-actions:
+            set-community:
+              options: add
+              set-community-method:
+                communities-list: [ "{{get_communities("std")["rpki_unknown"]}}" ]
+            set-ext-community:
+              options: add
+              set-ext-community-method:
+                communities-list: [ "{{ get_communities("ext")["rpki_unknown"] }}" ]
+            set-large-community:
+              options: add
+              set-large-community-method:
+                communities-list: [  "{{ get_communities("lrg")["rpki_unknown"] }}" ]
+
+
+      - name: Tag RPKI valid routes
+        conditions:
+          bgp-conditions:
+            rpki-validation-result: "valid"
+        actions:
+          bgp-actions:
+            set-community:
+              options: add
+              set-community-method:
+                communities-list: [ "{{get_communities("std")["rpki_valid"]}}" ]
+            set-ext-community:
+              options: add
+              set-ext-community-method:
+                communities-list: [ "{{ get_communities("ext")["rpki_valid"] }}" ]
+            set-large-community:
+              options: add
+              set-large-community-method:
+                communities-list: [ "{{ get_communities("lrg")["rpki_valid"] }}" ]
+
+
 
 {% for asn in clients|map(attribute='asn')|unique|list %}
 {% set client = get_client_from_asn(asn) %}
