@@ -477,7 +477,7 @@ cfg:
     #   Please note that this method is far from guaranteeing
     #   that a cryptographically validated dataset is retrieved
     #   from a trusted cache, unless the URL of a local, trusted
-    #   instance of RPKI Validator is provided below in the
+    #   instance of a RPKI validator is provided below in the
     #   'ripe_rpki_validator_url' option.
     #
     # OpenBGPD: only the 'ripe-rpki-validator-cache' source
@@ -494,21 +494,29 @@ cfg:
     # Default: 323
     #
     # RIPE RPKI Validator URL.
+    # URLs of files in RIPE NCC RPKI Validator cache format.
     # Meaningful only when 'source' is 'ripe-rpki-validator-cache'.
-    # It can be an 'http://' or 'https://' URL or the path of a
-    # local file.
+    # Multiple URLs can be provided here; they will be tried in
+    # the same order in which they are listed below.
+    # They can be 'http://' or 'https://' URLs or paths of
+    # local files.
     #
-    # Default: http://localcert.ripe.net:8088/export.json
-    ripe_rpki_validator_url: "http://localcert.ripe.net:8088/export.json"
+    # Default: RIPE NCC instance, NTT instance
+    ripe_rpki_validator_url:
+      - "https://rpki-validator.ripe.net/api/export.json"
+      - "https://rpki.gin.ntt.net/api/export.json"
 
     # When using the 'ripe-rpki-validator-cache' source, only the
     # following Trust Anchors will be taken into account.
     #
     # Values must be taken among those published in the RIPE RPKI
-    # Validator Configured Trust Anchors page:
-    # http://localcert.ripe.net:8088/trust-anchors
+    # Validator cache file configured above.
     #
-    # Before enabling the 'ARIN RPKI Root', please consider the
+    # Configured Trust Anchors pages:
+    # - NTT instance: https://rpki.gin.ntt.net/trust-anchors
+    # - RIPE NCC instance: https://rpki-validator.ripe.net/trust-anchors
+    #
+    # Before enabling any ARIN TA, please consider the
     # following URLs:
     #
     # http://lists.arin.net/pipermail/arin-ppml/2017-January/031231.html
@@ -517,15 +525,16 @@ cfg:
     #
     # Default: APNIC, AfriNIC, LACNIC and RIPE NCC.
     allowed_trust_anchors:
-      - "APNIC from AFRINIC RPKI Root"
-      - "APNIC from ARIN RPKI Root"
-      - "APNIC from IANA RPKI Root"
-      - "APNIC from LACNIC RPKI Root"
-      - "APNIC from RIPE RPKI Root"
+      - "APNIC RPKI Root"
       - "AfriNIC RPKI Root"
       - "LACNIC RPKI Root"
       - "RIPE NCC RPKI Root"
-      #- "ARIN RPKI Root"
+      #- "ARIN"
+      - "apnic"
+      - "afrinic"
+      - "lacnic"
+      - "ripe"
+      #- "arin"
 
   blackhole_filtering:
     # Destination-based blackholing policy: if a policy is given,
@@ -696,7 +705,7 @@ cfg:
     # Prefix/origin AS present in client's AS-SET.
     #
     # If 'tag_as_set' = True, prefixes that are (not) part of an
-    # AS-SET or whose origin ASN is (not) part of an AS-SET are 
+    # AS-SET or whose origin ASN is (not) part of an AS-SET are
     # tagged with the following BGP communities, provided that they
     # are set below.
     #
@@ -753,9 +762,9 @@ cfg:
       #std:
       #lrg:
       #ext:
- 
+
     # Control communities.
-    # 
+    #
     # Routes that are tagged with the following community are not
     # announced to any client, unless they are also tagged with the
     # 'announce_to_peer' communities: in this case, such routes are

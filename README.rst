@@ -42,9 +42,9 @@ How it works
 
 #. `Jinja2`_ built-in templates are used to render the final route server's configuration file.
 
-   Currently, **BIRD** (1.6.3 and 1.6.4) and **OpenBGPD** (OpenBSD 6.1 up to 6.4) are supported, with almost feature parity between them.
+   Currently, **BIRD** (1.6.x starting from 1.6.3) and **OpenBGPD** (OpenBSD 6.1 up to 6.5 and also OpenBGPD Portable 6.5p1) are supported, with almost feature parity between them.
 
-**Validation** and testing are performed using the built-in **live tests** framework: `Docker`_ instances are used to simulate several scenarios, and more custom scenarios can be built on the basis of the user's needs. More details on the `Live tests <https://arouteserver.readthedocs.io/en/latest/LIVETESTS.html>`_ section.
+**Validation** and testing are performed using the built-in **live tests** framework: `Docker`_ instances are used to simulate several scenarios and to validate the behaviour of the route server after configuring it with ARouteServer. More details on the `Live tests <https://arouteserver.readthedocs.io/en/latest/LIVETESTS.html>`_ section.
 
 .. _bgpq3: https://github.com/snar/bgpq3
 .. _PeeringDB: https://www.peeringdb.com/
@@ -156,9 +156,13 @@ Who is using ARouteServer?
 
 - `MBIX <http://www.mbix.ca/>`__, BIRD.
 
+- `Netnod <https://www.netnod.se/>`__, BIRD and GoBGP\ :sup:`1`\.
+
 - `PIT-IX <https://pit-ix.net/>`__, BIRD.
 
 - `SwissIX <https://www.swissix.ch/>`__, OpenBGPD.
+
+- `Unmetered.Exchange <https://unmetered.exchange/>`__, BIRD.
 
 - `VANIX <https://vanix.ca/>`__.
 
@@ -167,6 +171,8 @@ Who is using ARouteServer?
 - `YYCIX <https://yycix.ca>`__, OpenBGPD.
 
 Are you using it? Do you want to be listed here? `Drop me a message <https://pierky.com/#contactme>`__!
+
+\ :sup:`1`\: GoBGP configurations are generated using a fork of the project which is still WIP and that hopefully will be merged upstream in the future.
 
 Status
 ------

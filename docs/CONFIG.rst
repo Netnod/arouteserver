@@ -31,7 +31,7 @@ The ``arouteserver setup`` command can be used to setup the environment where AR
 Route server's configuration
 ----------------------------
 
-Route server's general configuration and policies are outlined in the ``general.yml`` file. 
+Route server's general configuration and policies are outlined in the ``general.yml`` file.
 
 Configuration details and options can be found within the distributed `general <https://github.com/pierky/arouteserver/blob/master/config.d/general.yml>`__ and `clients <https://github.com/pierky/arouteserver/blob/master/config.d/clients.yml>`__ configuration files on GitHub or in the :doc:`GENERAL` page.
 
@@ -241,7 +241,7 @@ ROAs sources
 
 A couple of methods can be used to acquire RPKI data (ROAs):
 
-- (BIRD and OpenBGPD) the builtin method based on `RIPE RPKI Validator cache <http://localcert.ripe.net:8088/>`__ export file: the URL of a local and trusted instance of RPKI Validator should be provided to ensure that a cryptographically validated datased is used. By default, the URL of the public instance is used.
+- (BIRD and OpenBGPD) the builtin method based on `RIPE RPKI Validator format <https://rpki-validator.ripe.net>`__ export files: the URL of a local and trusted instance of RPKI Validator should be provided to ensure that a cryptographically validated datased is used. By default, the URLs of some  public instances are used.
 
 - (BIRD only) external tools from the `rtrlib <http://rpki.realmv6.org/>`_ suite: `rtrlib <https://github.com/rtrlib>`__ and `bird-rtrlib-cli <https://github.com/rtrlib/bird-rtrlib-cli>`__. One or more trusted local validating caches should be used to get and validate RPKI data before pushing them to BIRD. An overview is provided on the `rtrlib GitHub wiki <https://github.com/rtrlib/rtrlib/wiki/Background>`__, where also an `usage guide <https://github.com/rtrlib/rtrlib/wiki/Usage-of-the-RTRlib>`__ can be found.
 
@@ -350,7 +350,7 @@ These files must be present on the host running the route server.
       	neighbor 192.0.2.99 as 65535;
       	rs client;
         secondary;
-      
+
       	import none;
       	export all;
       }
@@ -362,21 +362,21 @@ These files must be present on the host running the route server.
 
      $ arouteserver openbgpd --use-local-files header post-clients
      include "/etc/bgpd/header.local"
-     
+
      AS 999
      router-id 192.0.2.2
 
      [...]
 
      group "clients" {
-     
+
              neighbor 192.0.2.11 {
                      [...]
              }
      }
-     
+
      include "/etc/bgpd/post-clients.local"
-     
+
      [...]
 
   In the example above, the ``header`` and ``post-clients`` inclusion points are enabled and allow to insert two ``include`` statements into the generated configuration: one at the start of the file and one between clients declaration and filters.
@@ -389,24 +389,24 @@ These files must be present on the host running the route server.
      $ arouteserver openbgpd --use-local-files client footer --local-files-dir /etc/
      AS 999
      router-id 192.0.2.2
-     
+
      [...]
-     
+
      group "clients" {
-     
+
              neighbor 192.0.2.11 {
                      include "/etc/client.local"
                      [...]
              }
-     
+
              neighbor 192.0.2.22 {
                      include "/etc/client.local"
                      [...]
              }
      }
-     
+
      [...]
-     
+
      include "/etc/footer.local"
 
   The example above uses the ``client`` label, that is used to add an ``include`` statement into every neighbor configuration. Also, the base directory is set to ``/etc/``.
@@ -431,28 +431,28 @@ Example:
      $ arouteserver bird --ip-ver 4 --use-local-files header --use-hooks pre_receive_from_client
      router id 192.0.2.2;
      define rs_as = 999;
-     
+
      log "/var/log/bird.log" all;
      log syslog all;
      debug protocols all;
-     
+
      protocol device {};
-     
+
      table master sorted;
-     
+
      include "/etc/bird/header.local";
-     
+
      [...]
-     
+
      filter receive_from_AS3333_1 {
              if !(source = RTS_BGP ) then
                      reject "source != RTS_BGP - REJECTING ", net;
-     
+
              if !hook_pre_receive_from_client(3333, 192.0.2.11, "AS3333_1") then
                      reject "hook_pre_receive_from_client returned false - REJECTING ", net;
-     
+
              scrub_communities_in();
-     
+
      [...]
 
 Details about hook functions can be found in the :doc:`BIRD_HOOKS` page.
@@ -501,7 +501,7 @@ Caveats and limitations
 ***********************
 
 Not all features offered by ARouteServer are supported by both BIRD and OpenBGPD.
-The following list of limitations is based on the currently supported versions of BIRD (1.6.3 and 1.6.4) and OpenBGPD (OpenBSD 6.1 up to 6.4).
+The following list of limitations is based on the currently supported versions of BIRD and OpenBGPD.
 
 - OpenBGPD
 
@@ -516,6 +516,8 @@ The following list of limitations is based on the currently supported versions o
   - **Graceful shutdown** is supported only on OpenBGPD 6.2 or later.
 
   - The Site of Origin Extended BGP communities in the range 65535:* are reserved for internal reasons.
+
+A list of all the features and their support level among the BGP speakers is maintained on the :ref:`Supported BGP speakers and features` section of this documentation.
 
 Depending on the features that are enabled in the ``general.yml`` and ``clients.yml`` files, compatibility issues may arise; in this case, ARouteServer logs one or more errors, which can be then acknowledged and ignored using the ``--ignore-issues`` command line option:
 

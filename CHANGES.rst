@@ -3,8 +3,21 @@ Change log
 
 .. note:: **Upgrade notes**: after upgrading, run the ``arouteserver setup-templates`` command to sync the local templates with those distributed with the new version. More details on the `Upgrading <https://arouteserver.readthedocs.io/en/latest/INSTALLATION.html#upgrading>`__ section of the documentation.
 
-next release
-------------
+v0.22.1
+-------
+
+- Fix: handle more formats for ROAs exported from the public instances of RIPE and NTT validators.
+
+  A new way of representing ASNs (without the "AS" prefix) and new TA names which were not matched by the default values of ``rpki_roas.allowed_trust_anchors`` prevented ROAs from being imported and correctly processed when the default settings were used.
+
+v0.22.0
+-------
+
+This is the last release of ARouteServer for which Python 2.7 compatibility is guaranteed. From the next release, any new feature will not be tested against that version of Python.
+
+- New: `OpenBGPD Portable <https://github.com/openbgpd-portable/openbgpd-portable>` (release 6.5p1) also supported.
+
+  Release 6.5p1 of OpenBGPD Portable edition passed the integration testing suite.
 
 - New: add support for OpenBGPD/OpenBSD 6.5 enhancements.
 
@@ -15,8 +28,29 @@ next release
   Avoid checking AS0 in AS_PATH since 6.4.
   No needs to check routes of an address family different than the one used for the session.
 
-As announced with release 0.20.0, OpenBGPD/OpenBSD 6.2 is no longer tested.
+As announced with release 0.20.0, OpenBGPD/OpenBSD 6.2 is no longer tested. Also OpenBGPD/OpenBSD 6.3 tests have been decommissioned.
+Starting with this release, tests will be executed only against the 2 most recent releases of OpenBGPD/OpenBSD and against the last release of the supported major versions of BIRD.
 The implementation of new features may break compatibility of the configurations built for unsupported releases.
+
+v0.21.1
+-------
+
+- Deprecation: SAVVIS IRR removed from the list of default sources used by bgpq3.
+
+- Fix (minor): truncate the max length of AS-SET names to 64 characters.
+
+  BIRD supports only names no longer than 64 characters.
+
+  Related: `issue #47 on GitHub <https://github.com/pierky/arouteserver/issues/47>`_.
+
+v0.21.0
+-------
+
+- Improvement: when ``ripe-rpki-validator-cache`` is set as the source of ROAs, multiple URLs can now be specified to fetch data from.
+
+  URLs will be tried in the same order as they are configured; if the attempt to download ROAs from the first URL fails, the second URL will be tried, an so on.
+
+  By default, the `RIPE NCC public instance <https://rpki-validator.ripe.net/>`_ of the RIPE RPKI Validator will be tried first, then the `NTT instance <https://rpki.gin.ntt.net/>`_. The list of URLs can be set in the ``general.yml`` configuration file, ``roas.ripe_rpki_validator_url`` option.
 
 v0.20.0
 -------
@@ -39,9 +73,9 @@ Most of this release is based on the work made by `Claudio Jeker <https://github
 v0.19.1
 -------
 
-- Fix (BIRD configuration only): change `bgp_path.last` with `bgp_path.last_nonaggregated`.
+- Fix (BIRD configuration only): change ``bgp_path.last`` with ``bgp_path.last_nonaggregated``.
 
-  When a route is originated from the aggregation of two different routes using the AS_SET, `bgp_path.last` always returns 0, so the origin ASN validation against IRR always fails.
+  When a route is originated from the aggregation of two different routes using the AS_SET, ``bgp_path.last`` always returns 0, so the origin ASN validation against IRR always fails.
 
   Related: `issue #34 on GitHub <https://github.com/pierky/arouteserver/issues/34>`_.
 
@@ -212,7 +246,7 @@ v0.12.3
 - Improvement: always take the AS*n* macro into account when building IRRdb-based filters.
 
   Related: `issue #15 on GitHub <https://github.com/pierky/arouteserver/issues/15>`_.
-  
+
 v0.12.2
 -------
 
@@ -451,7 +485,7 @@ v0.1.0a6
 --------
 
 - New feature: RPKI-based filtering/tagging.
-  
+
 v0.1.0a5
 --------
 
